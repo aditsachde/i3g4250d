@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [v0.3.0] - 2020-11-10
+
+### Changed
+
+- Convert the crate to be compatible with the I3G4250D gyroscope.
+
 ## [v0.2.0] - 2018-05-12
 
 ### Changed

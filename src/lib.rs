@@ -1,4 +1,4 @@
-//! A platform agnostic driver to interface with the L3GD20 (gyroscope)
+//! A platform agnostic driver to interface with the I3G4250D (gyroscope)
 //!
 //! This driver was built using [`embedded-hal`] traits.
 //!
@@ -24,25 +24,25 @@ use embedded_hal::spi::{Mode};
 pub const MODE: Mode = embedded_hal::spi::MODE_3;
 
 
-/// L3GD20 driver
-pub struct L3gd20<SPI, CS> {
+/// I3G4250D driver
+pub struct I3G4250D<SPI, CS> {
     spi: SPI,
     cs: CS,
 }
 
-impl<SPI, CS, E> L3gd20<SPI, CS>
+impl<SPI, CS, E> I3G4250D<SPI, CS>
 where
     SPI: Transfer<u8, Error = E> + Write<u8, Error = E>,
     CS: OutputPin,
 {
     /// Creates a new driver from a SPI peripheral and a NCS pin
     pub fn new(spi: SPI, cs: CS) -> Result<Self, E> {
-        let mut l3gd20 = L3gd20 { spi, cs };
+        let mut i3g4259d = I3G4250D { spi, cs };
 
         // power up and enable all the axes
-        l3gd20.write_register(Register::CTRL_REG1, 0b00_00_1_111)?;
+        i3g4259d.write_register(Register::CTRL_REG1, 0b00_00_1_111)?;
 
-        Ok(l3gd20)
+        Ok(i3g4259d)
     }
 
     /// Temperature measurement + gyroscope measurements
@@ -170,7 +170,7 @@ where
     ///
     /// Helper function to update a particular part of a register without
     /// affecting other parts of the register that might contain desired
-    /// configuration. This allows the `L3gd20` struct to be used like
+    /// configuration. This allows the `I3G4250D` struct to be used like
     /// a builder interface when configuring specific parameters.
     fn change_config<B: BitValue>(&mut self, reg: Register, bits: B) -> Result<&mut Self, E> {
         // Create bit mask from width and shift of value
@@ -242,14 +242,14 @@ enum Register {
 /// Output Data Rate
 #[derive(Debug, Clone, Copy)]
 pub enum Odr {
-    /// 95 Hz data rate
-    Hz95 = 0x00,
-    /// 190 Hz data rate
-    Hz190 = 0x01,
-    /// 380 Hz data rate
-    Hz380 = 0x02,
-    /// 760 Hz data rate
-    Hz760 = 0x03,
+    /// 100 Hz data rate
+    Hz100 = 0x00,
+    /// 200 Hz data rate
+    Hz200 = 0x01,
+    /// 400 Hz data rate
+    Hz400 = 0x02,
+    /// 800 Hz data rate
+    Hz800 = 0x03,
 }
 
 impl BitValue for Odr {
@@ -268,10 +268,10 @@ impl Odr {
     fn from_u8(from: u8) -> Self {
         // Extract ODR value, converting to enum (ROI: 0b1100_0000)
         match (from >> Odr::shift()) & Odr::mask() {
-            x if x == Odr::Hz95 as u8 => Odr::Hz95,
-            x if x == Odr::Hz190 as u8 => Odr::Hz190,
-            x if x == Odr::Hz380 as u8 => Odr::Hz380,
-            x if x == Odr::Hz760 as u8 => Odr::Hz760,
+            x if x == Odr::Hz100 as u8 => Odr::Hz100,
+            x if x == Odr::Hz200 as u8 => Odr::Hz200,
+            x if x == Odr::Hz400 as u8 => Odr::Hz400,
+            x if x == Odr::Hz800 as u8 => Odr::Hz800,
             _ => unreachable!(),
         }
     }
@@ -280,8 +280,8 @@ impl Odr {
 /// Full scale selection
 #[derive(Debug, Clone, Copy)]
 pub enum Scale {
-    /// 250 Degrees Per Second
-    Dps250 = 0x00,
+    /// 245 Degrees Per Second
+    Dps245 = 0x00,
     /// 500 Degrees Per Second
     Dps500 = 0x01,
     /// 2000 Degrees Per Second
@@ -305,7 +305,7 @@ impl Scale {
         // Extract scale value from register, ensure that we mask with
         // `0b0000_0011` to extract `FS1-FS2` part of register
         match (from >> Scale::shift()) & Scale::mask() {
-            x if x == Scale::Dps250 as u8 => Scale::Dps250,
+            x if x == Scale::Dps245 as u8 => Scale::Dps245,
             x if x == Scale::Dps500 as u8 => Scale::Dps500,
             x if x == Scale::Dps2000 as u8 => Scale::Dps2000,
             // Special case for Dps2000
@@ -372,7 +372,7 @@ impl Scale {
     /// Convert a measurement to degrees
     pub fn degrees(&self, val: i16) -> f32 {
         match *self {
-            Scale::Dps250 => val as f32 * 0.00875,
+            Scale::Dps245 => val as f32 * 0.00875,
             Scale::Dps500 => val as f32 * 0.0175,
             Scale::Dps2000 => val as f32 * 0.07,
         }

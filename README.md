@@ -1,6 +1,8 @@
-# `l3gd20`
+# `i3g4250d`
 
-> A platform agnostic driver to interface with the L3GD20 (gyroscope)
+> A platform agnostic driver to interface with the I3G4250D (gyroscope)
+
+This crate is a modification of the [l3dg20 crate](https://github.com/tstellanova/l3gd20).
 
 ## What works
 
